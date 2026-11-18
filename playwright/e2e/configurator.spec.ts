@@ -1,11 +1,11 @@
-import { test, expect } from '../support/fixtures';
+import { test } from '../support/fixtures';
 
 test.describe('Vehicle Configurator', () => {
   test.beforeEach(async ({ app }) => {
     await app.configurator.open();
   });
 
-  test('CT03 - should display default configuration and base price of R$ 40.000,00', async ({ app }) => {
+  test('CT03 - Configurator: Default Configuration and Base Price', async ({ app }) => {
     await app.configurator.validateDefaultConfiguration();
   });
 
@@ -36,10 +36,20 @@ test.describe('Vehicle Configurator', () => {
     await app.configurator.setOptional('Flux Capacitor', false);
     await app.configurator.setOptional('Precision Park', false);
     await app.configurator.validatePrice('R$ 40.000,00');
-    //4. Click in monte o seu button and go to checkout page validating the value there
+  });
+
+  test('CT06 - Configurator: Transition to Checkout with State Retention', async ({ app }) => {
+    // 1. Configure custom car: Lunar White, Sport Wheels, Precision Park
+    await app.configurator.selectColor('Lunar White');
+    await app.configurator.selectWheel('sport');
+    await app.configurator.setOptional('Precision Park', true);
+    await app.configurator.validatePrice('R$ 47.500,00');
+
+    // 2. Proceed to checkout
     await app.configurator.goToCheckout();
 
+    // 3. Verify state retention at checkout
     await app.checkout.validatePageLoad();
-    await app.checkout.validateSummaryPrice('R$ 40.000,00')
+    await app.checkout.validateSummaryPrice('R$ 47.500,00');
   });
 });

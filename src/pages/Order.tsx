@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import InputMask from 'react-input-mask';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { z } from 'zod';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import _InputMask, { Props as InputMaskProps } from 'react-input-mask'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { z } from 'zod'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useToast } from '@/hooks/use-toast'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
   useConfiguratorStore,
   calculateTotalPrice,
@@ -24,17 +24,19 @@ import {
   WheelType,
   OPTIONAL_LABELS,
   OPTIONAL_PRICES,
-} from '@/store/configuratorStore';
-import { createOrder } from '@/hooks/useOrders';
-import { supabase } from '@/integrations/supabase/client';
+} from '@/store/configuratorStore'
+import { createOrder } from '@/hooks/useOrders'
+import { supabase } from '@/integrations/supabase/client'
 
-import logo from '@/assets/brand.svg';
-import glacierBlueAero from '@/assets/glacier-blue-aero-wheels.png';
-import glacierBlueSport from '@/assets/glacier-blue-sport-wheels.png';
-import lunarWhiteAero from '@/assets/lunar-white-aero-wheels.png';
-import lunarWhiteSport from '@/assets/lunar-white-sport-wheels.png';
-import midnightBlackAero from '@/assets/midnight-black-aero-wheels.png';
-import midnightBlackSport from '@/assets/midnight-black-sport-wheels.png';
+import logo from '@/assets/brand.svg'
+import glacierBlueAero from '@/assets/glacier-blue-aero-wheels.png'
+import glacierBlueSport from '@/assets/glacier-blue-sport-wheels.png'
+import lunarWhiteAero from '@/assets/lunar-white-aero-wheels.png'
+import lunarWhiteSport from '@/assets/lunar-white-sport-wheels.png'
+import midnightBlackAero from '@/assets/midnight-black-aero-wheels.png'
+import midnightBlackSport from '@/assets/midnight-black-sport-wheels.png'
+
+const InputMask = _InputMask as unknown as React.ComponentType<InputMaskProps>
 
 const exteriorImages: Record<ExteriorColor, Record<WheelType, string>> = {
   'glacier-blue': {
@@ -49,161 +51,161 @@ const exteriorImages: Record<ExteriorColor, Record<WheelType, string>> = {
     aero: midnightBlackAero,
     sport: midnightBlackSport,
   },
-};
+}
 
 const stores = [
   'Velô Paulista - Av. Paulista, 1000',
   'Velô Faria Lima - Av. Faria Lima, 2500',
   'Velô Morumbi - Av. Morumbi, 1500',
   'Velô Ibirapuera - Av. Ibirapuera, 3000',
-];
+]
 
 const orderSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  surname: z.string().min(2, 'Sobrenome deve ter pelo menos 2 caracteres'),
+  lastname: z.string().min(2, 'Sobrenome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  phone: z.string().min(14, 'Telefone inválido'),
-  cpf: z.string().min(14, 'CPF inválido'),
+  phone: z.string().refine((val) => /^\(\d{2}\) \d{4,5}-\d{4}$/.test(val), 'Telefone inválido'),
+  cpf: z.string().refine((val) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val), 'CPF inválido'),
   store: z.string().min(1, 'Selecione uma loja'),
   terms: z.boolean().refine((val) => val === true, 'Aceite os termos'),
-});
+})
 
-type FormData = z.infer<typeof orderSchema>;
+type FormData = z.infer<typeof orderSchema>
 
 const colorLabels: Record<ExteriorColor, string> = {
   'glacier-blue': 'Glacier Blue',
   'lunar-white': 'Lunar White',
   'midnight-black': 'Midnight Black',
-};
+}
 
 const Order = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { configuration, resetConfiguration } = useConfiguratorStore();
-  const [paymentMethod, setPaymentMethod] = useState<'avista' | 'financiamento'>('avista');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [entryValue, setEntryValue] = useState<number>(0);
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const { configuration, resetConfiguration } = useConfiguratorStore()
+  const [paymentMethod, setPaymentMethod] = useState<'avista' | 'financiamento'>('avista')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
+  const [entryValue, setEntryValue] = useState<number>(0)
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    surname: '',
+    lastname: '',
     email: '',
     phone: '',
     cpf: '',
     store: '',
     terms: false,
-  });
+  })
 
-  const totalPrice = calculateTotalPrice(configuration);
-  
+  const totalPrice = calculateTotalPrice(configuration)
+
   // Cálculo dinâmico das parcelas baseado no valor da entrada
   // Parcela = (Total - Entrada) / 12 * 1.02
-  const amountToFinance = Math.max(0, totalPrice - entryValue);
-  const installmentValue = (amountToFinance / 12) * 1.02;
-  const totalFinanced = installmentValue * 12;
+  const amountToFinance = Math.max(0, totalPrice - entryValue)
+  const installmentValue = (amountToFinance / 12) * 1.02
+  const totalFinanced = installmentValue * 12
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Validate
-    const result = orderSchema.safeParse(formData);
+    const result = orderSchema.safeParse(formData)
     if (!result.success) {
-      const fieldErrors: Partial<Record<keyof FormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof FormData, string>> = {}
       result.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof FormData;
-        fieldErrors[field] = err.message;
-      });
-      setErrors(fieldErrors);
-      return;
+        const field = err.path[0] as keyof FormData
+        fieldErrors[field] = err.message
+      })
+      setErrors(fieldErrors)
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
-    let orderStatus: 'APROVADO' | 'REPROVADO' | 'EM_ANALISE' = 'APROVADO';
+    let orderStatus: 'APROVADO' | 'REPROVADO' | 'EM_ANALISE' = 'APROVADO'
 
     // Análise de crédito apenas para financiamento
     if (paymentMethod === 'financiamento') {
       try {
         const { data, error } = await supabase.functions.invoke('credit-analysis', {
           body: { cpf: formData.cpf },
-        });
+        })
 
         if (error || !data || typeof data.score !== 'number') {
-          console.error('Credit analysis error:', error || 'Invalid response');
+          console.error('Credit analysis error:', error || 'Invalid response')
           toast({
             title: 'Erro',
             description: 'Falha ao consultar análise de crédito. Verifique seus dados ou tente mais tarde.',
             variant: 'destructive',
             // @ts-ignore - data-testid para testes
             'data-testid': 'toast-error',
-          });
-          setIsSubmitting(false);
-          return;
+          })
+          setIsSubmitting(false)
+          return
         }
 
-        const score = data.score;
-        const entryPercentage = entryValue / totalPrice;
+        const score = data.score
+        const entryPercentage = entryValue / totalPrice
 
         // Regras de Decisão (Ordem de Avaliação)
         // 1️⃣ Regra da Entrada Alta: SE (Entrada >= 50% do Total) E (Score < 700) → APROVADO
         if (entryPercentage >= 0.5 && score < 700) {
-          orderStatus = 'APROVADO';
+          orderStatus = 'APROVADO'
         }
         // 2️⃣ Score Alto: SE Score > 700 → APROVADO
         else if (score > 700) {
-          orderStatus = 'APROVADO';
+          orderStatus = 'APROVADO'
         }
         // 3️⃣ Score Médio: SE Score entre 501 e 700 → EM_ANALISE
         else if (score >= 501 && score <= 700) {
-          orderStatus = 'EM_ANALISE';
+          orderStatus = 'EM_ANALISE'
         }
         // 4️⃣ Score Baixo: SE Score <= 500 → REPROVADO
         else {
-          orderStatus = 'REPROVADO';
+          orderStatus = 'REPROVADO'
         }
 
       } catch (err) {
-        console.error('Credit analysis network error:', err);
+        console.error('Credit analysis network error:', err)
         toast({
           title: 'Erro',
           description: 'Falha ao consultar análise de crédito. Verifique seus dados ou tente mais tarde.',
           variant: 'destructive',
           // @ts-ignore - data-testid para testes
           'data-testid': 'toast-error',
-        });
-        setIsSubmitting(false);
-        return;
+        })
+        setIsSubmitting(false)
+        return
       }
     }
 
-    const finalPrice = paymentMethod === 'financiamento' 
-      ? (entryValue + totalFinanced) 
-      : totalPrice;
+    const finalPrice = paymentMethod === 'financiamento'
+      ? (entryValue + totalFinanced)
+      : totalPrice
 
     const optionalsSanitized = (
       (configuration.optionals as unknown as string[]).filter(
         (opt) => opt in (OPTIONAL_PRICES as Record<string, number>)
       ) as unknown as typeof configuration.optionals
-    );
+    )
 
     const configurationForOrder = {
       ...configuration,
       optionals: optionalsSanitized,
-    };
+    }
 
     const { order, error } = await createOrder({
       configuration: configurationForOrder,
       totalPrice: finalPrice,
       customer: {
         name: formData.name,
-        surname: formData.surname,
+        surname: formData.lastname,
         email: formData.email,
         phone: formData.phone,
         cpf: formData.cpf,
@@ -211,27 +213,27 @@ const Order = () => {
       },
       paymentMethod,
       status: orderStatus,
-    });
+    })
 
     if (error || !order) {
       toast({
         title: 'Erro ao criar pedido',
         description: error || 'Tente novamente mais tarde.',
         variant: 'destructive',
-      });
-      setIsSubmitting(false);
-      return;
+      })
+      setIsSubmitting(false)
+      return
     }
 
     // Add installment value for display
     if (paymentMethod === 'financiamento') {
-      order.installmentValue = installmentValue;
+      order.installmentValue = installmentValue
     }
-    order.customer.store = formData.store;
+    order.customer.store = formData.store
 
-    resetConfiguration();
-    navigate('/success', { state: { order } });
-  };
+    resetConfiguration()
+    navigate('/success', { state: { order } })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,7 +259,7 @@ const Order = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8" noValidate>
               {/* Personal Info */}
               <section className="bg-card rounded-lg p-6 shadow-elegant">
                 <h2 className="font-display text-lg font-semibold mb-6">Dados Pessoais</h2>
@@ -271,18 +273,26 @@ const Order = () => {
                       onChange={(e) => handleChange('name', e.target.value)}
                       className={cn(errors.name && 'border-destructive')}
                     />
-                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                    {errors.name && (
+                      <p data-testid="error-name" data-test-id="error-name" className="text-sm text-destructive">
+                        {errors.name}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="surname">Sobrenome</Label>
+                    <Label htmlFor="lastname">Sobrenome</Label>
                     <Input
-                      id="surname"
-                      data-testid="checkout-surname"
-                      value={formData.surname}
-                      onChange={(e) => handleChange('surname', e.target.value)}
-                      className={cn(errors.surname && 'border-destructive')}
+                      id="lastname"
+                      data-testid="checkout-lastname"
+                      value={formData.lastname}
+                      onChange={(e) => handleChange('lastname', e.target.value)}
+                      className={cn(errors.lastname && 'border-destructive')}
                     />
-                    {errors.surname && <p className="text-sm text-destructive">{errors.surname}</p>}
+                    {errors.lastname && (
+                      <p data-testid="error-lastname" data-test-id="error-lastname" className="text-sm text-destructive">
+                        {errors.lastname}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -294,7 +304,11 @@ const Order = () => {
                       onChange={(e) => handleChange('email', e.target.value)}
                       className={cn(errors.email && 'border-destructive')}
                     />
-                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                    {errors.email && (
+                      <p data-testid="error-email" data-test-id="error-email" className="text-sm text-destructive">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>
@@ -312,7 +326,11 @@ const Order = () => {
                         />
                       )}
                     </InputMask>
-                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                    {errors.phone && (
+                      <p data-testid="error-phone" data-test-id="error-phone" className="text-sm text-destructive">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
@@ -330,7 +348,11 @@ const Order = () => {
                         />
                       )}
                     </InputMask>
-                    {errors.cpf && <p className="text-sm text-destructive">{errors.cpf}</p>}
+                    {errors.cpf && (
+                      <p data-testid="error-cpf" data-test-id="error-cpf" className="text-sm text-destructive">
+                        {errors.cpf}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="store">Loja para Retirada</Label>
@@ -353,7 +375,11 @@ const Order = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.store && <p className="text-sm text-destructive">{errors.store}</p>}
+                    {errors.store && (
+                      <p data-testid="error-store" data-test-id="error-store" className="text-sm text-destructive">
+                        {errors.store}
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
@@ -461,7 +487,11 @@ const Order = () => {
                         Política de Privacidade
                       </Link>
                     </Label>
-                    {errors.terms && <p className="text-sm text-destructive mt-1">{errors.terms}</p>}
+                    {errors.terms && (
+                      <p data-testid="error-terms" data-test-id="error-terms" className="text-sm text-destructive mt-1">
+                        {errors.terms}
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
@@ -536,7 +566,7 @@ const Order = () => {
         </div>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default Order;
+export default Order

@@ -267,6 +267,10 @@ Validate that malformed email inputs (e.g., missing `@`, missing domain, invalid
 | 3  | Click "Confirmar Pedido". | Error message "Email inválido" is displayed under the email field. |
 | 4  | Change Email to `carlos@` and click submit. | Error message "Email inválido" persists. |
 | 5  | Change Email to `carlos@domain.com`. | Error message clears. |
+| 6  | In the cpf field enter `1234`. | Value is incomplete. |
+| 7  | Click "Confirmar Pedido". | Error message "CPF inválido" is displayed under the cpf field. |
+| 8  | Fill all fields correctly but keep the "Li e aceito os Termos" unchecked | Error message "Aceite os termos" is displayed under the terms checkbox. |
+
 
 #### Expected Results
 - Email syntax validation ensures only RFC-compliant addresses are accepted.

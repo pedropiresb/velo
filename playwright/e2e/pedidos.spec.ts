@@ -4,6 +4,10 @@ import { generateOrderCode } from '../support/helpers'
 
 import { OrderDetails } from '../support/actions/orderLookupActions'
 
+import { insertOrder, deleteOrderByNumber } from '../support/database/orderRepository'
+
+import orders from '../support/fixtures/orders.json' with { type: 'json' }
+
 /// AAA - Arrange, Act, Assert
 
 test.describe('Consulta de Pedido', () => {
@@ -17,18 +21,11 @@ test.describe('Consulta de Pedido', () => {
 
   test('deve consultar um pedido aprovado', async ({ app }) => {
 
-    // Test Data
-    const order: OrderDetails = {
-      number: 'VLO-LXCG92',
-      status: 'APROVADO',
-      color: 'Glacier Blue',
-      wheels: 'sport Wheels',
-      customer: {
-        name: 'Pedro Barreto',
-        email: 'pedro@velo.dev'
-      },
-      payment: 'À Vista'
-    }
+    const order: OrderDetails = orders.aprovado as OrderDetails
+
+    await deleteOrderByNumber(order.number)
+
+    await insertOrder(order)
 
     // Act
     await app.orderLookup.searchOrder(order.number)
@@ -40,18 +37,11 @@ test.describe('Consulta de Pedido', () => {
 
   test('deve consultar um pedido reprovado', async ({ app }) => {
 
-    // Test Data
-    const order: OrderDetails = {
-      number: 'VLO-PSVJPK',
-      status: 'REPROVADO',
-      color: 'Midnight Black',
-      wheels: 'sport Wheels',
-      customer: {
-        name: 'Pedro Pires',
-        email: 'pedropiresb@email.com'
-      },
-      payment: 'À Vista'
-    }
+    const order: OrderDetails = orders.reprovado as OrderDetails
+
+    await deleteOrderByNumber(order.number)
+
+    await insertOrder(order)
 
     // Act
     await app.orderLookup.searchOrder(order.number)
@@ -63,19 +53,11 @@ test.describe('Consulta de Pedido', () => {
 
   test('deve consultar um pedido em analise', async ({ app }) => {
 
-    // Test Data
-    const order: OrderDetails = {
-      number: 'VLO-R4PQOJ',
-      status: 'EM_ANALISE',
-      color: 'Lunar White',
-      wheels: 'aero Wheels',
-      customer: {
-        name: 'Jose Ricardo',
-        email: 'jose@email.com'
-      },
-      payment: 'À Vista'
-    }
+    const order: OrderDetails = orders.emAnalise as OrderDetails
 
+    await deleteOrderByNumber(order.number)
+
+    await insertOrder(order)
     // Act
     await app.orderLookup.searchOrder(order.number)
 
@@ -99,6 +81,6 @@ test.describe('Consulta de Pedido', () => {
 
     await app.orderLookup.validateBtnDisabled()
 
-    await app.orderLookup.validateBtnDisabledWithSpace
+    await app.orderLookup.validateBtnDisabledWithSpace()
   })
 })

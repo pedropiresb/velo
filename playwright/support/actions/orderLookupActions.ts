@@ -7,18 +7,19 @@ export type OrderDetails = {
   status: OrderStatus
   color: string
   wheels: string
-  customer: { name: string; email: string }
-  payment: string
+  customer: { name: string; email: string; document: string; phone: string }
+  payment: string,
+  totalPrice: number
 }
 
 export function createOrderLookupActions(page: Page) {
 
   const inputOrder = page.getByRole('textbox', { name: 'Número do Pedido' })
   const buttonSearchOrder = page.getByRole('button', { name: 'Buscar Pedido' })
-  
+
   return {
 
-    async open(){
+    async open() {
       await page.goto('http://localhost:5173/')
       const heading = page.getByTestId('hero-section').getByRole('heading')
       await expect(heading).toContainText('Velô Sprint')
@@ -100,16 +101,16 @@ export function createOrderLookupActions(page: Page) {
     },
 
     async validateBtnDisabled() {
-      
+
       await expect(buttonSearchOrder).toBeDisabled()
     },
 
     async validateBtnDisabledWithSpace() {
-      
+
       await inputOrder.fill('   ')
       await expect(buttonSearchOrder).toBeDisabled()
     },
 
- 
+
   }
 }
