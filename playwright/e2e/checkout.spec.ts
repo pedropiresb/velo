@@ -1,8 +1,34 @@
 import { test } from '../support/fixtures'
 
+import { deleteOrderByEmail } from '../support/database/orderRepository'
+
 test.describe('Checkout', () => {
   test.beforeEach(async ({ app }) => {
     await app.checkout.open()
+  })
+
+  test('CT07 - Checkout: Successful Cash Order Submission (Happy Path)', async ({ app }) => {
+    //test.slow()
+
+
+
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Silva',
+      email: 'customer_CT07@example.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-00',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'avista' as const,
+    }
+    await deleteOrderByEmail(customer.email)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderSuccess()
   })
 
   test('CT08 - Checkout: Mandatory Fields Empty Validation', async ({ app, page }) => {

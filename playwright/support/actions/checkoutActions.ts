@@ -5,6 +5,8 @@ export function createCheckoutActions(page: Page) {
   const heading = page.getByRole('heading', { name: 'Finalizar Pedido' })
   const summaryTotalPrice = page.getByTestId('summary-total-price')
   const submitButton = page.getByTestId('checkout-submit')
+  const successStatus = page.getByTestId('success-status')
+  const orderId = page.getByTestId('order-id')
 
   return {
 
@@ -73,8 +75,18 @@ export function createCheckoutActions(page: Page) {
       await page.getByTestId('checkout-terms').check()
     },
 
+    async selectPaymentMethod(method: 'avista' | 'financiamento') {
+      await page.getByTestId(`payment-${method}`).click()
+    },
+
     async submitOrder() {
       await submitButton.click()
+    },
+
+    async validateOrderSuccess() {
+      await expect(page).toHaveURL(/.*\/success/)
+      await expect(successStatus).toHaveText('Pedido Aprovado!')
+      await expect(orderId).toHaveText(/^VLO-[A-Z0-9]{6}$/)
     },
 
 
