@@ -1,26 +1,33 @@
 import { test as base } from '@playwright/test'
 //import { createLandingActions } from './actions/landingActions'
 //import { createNavbarActions } from './actions/navbarActions'
-import { createOrderLookupActions } from './actions/orderLookupActions'
-import { createConfiguratorActions } from './actions/configuratorActions'
-import { createCheckoutActions } from './actions/checkoutActions'
+import { createOrderLookupActions } from '../actions/orderLookupActions'
+import { createConfiguratorActions } from '../actions/configuratorActions'
+import { createCheckoutActions } from '../actions/checkoutActions'
+import { changeScoreMocked } from './mock.api'
 
 type App = {
-//  landing: ReturnType<typeof createLandingActions>
-//  navbar: ReturnType<typeof createNavbarActions>
+  //  landing: ReturnType<typeof createLandingActions>
+  //  navbar: ReturnType<typeof createNavbarActions>
   orderLookup: ReturnType<typeof createOrderLookupActions>
   configurator: ReturnType<typeof createConfiguratorActions>
   checkout: ReturnType<typeof createCheckoutActions>
+  mock: {
+    creditAnalysis: (score: number) => Promise<void>
+  }
 }
 
 export const test = base.extend<{ app: App }>({
   app: async ({ page }, use) => {
     const app: App = {
-    //  landing: createLandingActions(page),
-     // navbar: createNavbarActions(page),
+      //  landing: createLandingActions(page),
+      // navbar: createNavbarActions(page),
       orderLookup: createOrderLookupActions(page),
       configurator: createConfiguratorActions(page),
       checkout: createCheckoutActions(page),
+      mock: {
+        creditAnalysis: async (score: number) => await changeScoreMocked(page, score),
+      }
     }
     await use(app)
   },

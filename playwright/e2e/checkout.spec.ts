@@ -1,4 +1,5 @@
-import { test } from '../support/fixtures'
+import { test } from '../support/fixtures/fixtures'
+import { changeScoreMocked } from '../support/fixtures/mock.api'
 
 import { deleteOrderByEmail } from '../support/database/orderRepository'
 
@@ -28,7 +29,7 @@ test.describe('Checkout', () => {
     await app.checkout.acceptTerms()
     await app.checkout.submitOrder()
 
-    await app.checkout.validateOrderSuccess()
+    await app.checkout.validateOrderResult('Pedido Aprovado!')
   })
 
   test('CT08 - Checkout: Mandatory Fields Empty Validation', async ({ app, page }) => {
@@ -69,6 +70,156 @@ test.describe('Checkout', () => {
     await app.checkout.submitOrder()
 
     await app.checkout.validateErrorMessage('Aceite os termos')
+  })
+
+  test('CT12 - Financing: Credit Score > 700 Yields Immediate Approval ', async ({ app, page }) => {
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Augusto',
+      email: 'customer_CT12@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-00',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+      score: 701
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(customer.score)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Pedido Aprovado!')
+  })
+
+  test('CT13 - Financing: Credit Score Between 501 and 700 Sets Status to Under Analysis', async ({ app, page }) => {
+    test.slow()
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Patricio',
+      email: 'customer_CT13@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-01',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+      score: 699
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(customer.score)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Pedido em Análise!')
+  })
+
+  test('CT14 - Financing: Credit Score <= 500 Yields Order Rejection', async ({ app, page }) => {
+    test.slow()
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Miguel',
+      email: 'customer_CT14@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-02',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(350)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Crédito Reprovado')
+
+
+  })
+
+  test('CT14 - Financing: Credit Score <= 500 Yields with entry Order Rejection', async ({ app, page }) => {
+    test.slow()
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Miguel',
+      email: 'customer_CT14@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-02',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+      entry: '10000',
+      score: 350
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(customer.score)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.fillEntry(customer.entry)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Crédito Reprovado')
+  })
+
+  test('CT15 - Financing: Credit Score <= 500 Yields with entry equals to 50% approval', async ({ app, page }) => {
+    test.slow()
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Miguel',
+      email: 'customer_CT14@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-02',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+      entry: '20000',
+      score: 350
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(customer.score)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.fillEntry(customer.entry)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Pedido Aprovado!')
+  })
+
+  test('CT15 - Financing: Credit Score <= 500 Yields with entry higher than 50% approval', async ({ app, page }) => {
+    test.slow()
+    const customer = {
+      name: 'Carlos',
+      lastname: 'Miguel',
+      email: 'customer_CT14@ample.com',
+      phone: '(11) 98765-4321',
+      cpf: '123.456.789-02',
+      store: 'Velô Paulista - Av. Paulista, 1000',
+      paymentMethod: 'financiamento' as const,
+      entry: '30000',
+      score: 350
+    }
+    await deleteOrderByEmail(customer.email)
+
+    await app.mock.creditAnalysis(customer.score)
+    await app.checkout.fillPersonalData(customer)
+    await app.checkout.fillStoreField(customer.store)
+    await app.checkout.selectPaymentMethod(customer.paymentMethod)
+    await app.checkout.fillEntry(customer.entry)
+    await app.checkout.acceptTerms()
+    await app.checkout.submitOrder()
+
+    await app.checkout.validateOrderResult('Pedido Aprovado!')
   })
 })
 

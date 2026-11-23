@@ -83,11 +83,17 @@ export function createCheckoutActions(page: Page) {
       await submitButton.click()
     },
 
-    async validateOrderSuccess() {
+    async validateOrderResult(text: string) {
       await expect(page).toHaveURL(/.*\/success/)
-      await expect(successStatus).toHaveText('Pedido Aprovado!')
+      await expect(successStatus).toHaveText(text)
       await expect(orderId).toHaveText(/^VLO-[A-Z0-9]{6}$/)
     },
+
+    async fillEntry(entry: string) {
+      await page.getByTestId('input-entry-value').fill(entry)
+    },
+
+
 
 
 
