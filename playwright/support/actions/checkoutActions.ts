@@ -11,7 +11,7 @@ export function createCheckoutActions(page: Page) {
   return {
 
     async open() {
-      await page.goto('http://localhost:5173/order')
+      await page.goto('/order')
       await expect(heading).toBeVisible()
     },
 

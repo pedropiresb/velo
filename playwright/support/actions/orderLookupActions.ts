@@ -20,7 +20,7 @@ export function createOrderLookupActions(page: Page) {
   return {
 
     async open() {
-      await page.goto('http://localhost:5173/')
+      await page.goto('/')
       const heading = page.getByTestId('hero-section').getByRole('heading')
       await expect(heading).toContainText('Velô Sprint')
       await page.getByRole('link', { name: 'Consultar Pedido' }).click()

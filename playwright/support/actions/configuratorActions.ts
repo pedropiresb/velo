@@ -18,7 +18,7 @@ export function createConfiguratorActions(page: Page) {
             await page.addInitScript(() => {
                 window.localStorage.clear();
             });
-            await page.goto('http://localhost:5173/configure');
+            await page.goto('/configure');
             await expect(page.getByRole('heading', { name: 'Velô Sprint' })).toBeVisible();
         },
 
