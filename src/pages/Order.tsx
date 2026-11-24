@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import _InputMask, { Props as InputMaskProps } from 'react-input-mask'
 import { ArrowLeft, Loader2 } from 'lucide-react'
-import { z } from 'zod'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +26,8 @@ import {
 } from '@/store/configuratorStore'
 import { createOrder } from '@/hooks/useOrders'
 import { supabase } from '@/integrations/supabase/client'
+import { evaluateCreditDecision } from '@/lib/creditDecision'
+import { orderSchema, OrderFormData as FormData } from '@/schemas/orderSchema'
 
 import logo from '@/assets/brand.svg'
 import glacierBlueAero from '@/assets/glacier-blue-aero-wheels.png'
@@ -59,18 +60,6 @@ const stores = [
   'Velô Morumbi - Av. Morumbi, 1500',
   'Velô Ibirapuera - Av. Ibirapuera, 3000',
 ]
-
-const orderSchema = z.object({
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  lastname: z.string().min(2, 'Sobrenome deve ter pelo menos 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  phone: z.string().refine((val) => /^\(\d{2}\) \d{4,5}-\d{4}$/.test(val), 'Telefone inválido'),
-  cpf: z.string().refine((val) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(val), 'CPF inválido'),
-  store: z.string().min(1, 'Selecione uma loja'),
-  terms: z.boolean().refine((val) => val === true, 'Aceite os termos'),
-})
-
-type FormData = z.infer<typeof orderSchema>
 
 const colorLabels: Record<ExteriorColor, string> = {
   'glacier-blue': 'Glacier Blue',
@@ -151,25 +140,11 @@ const Order = () => {
         }
 
         const score = data.score
-        const entryPercentage = entryValue / totalPrice
-
-        // Regras de Decisão (Ordem de Avaliação)
-        // 1️⃣ Regra da Entrada Alta: SE (Entrada >= 50% do Total) E (Score < 700) → APROVADO
-        if (entryPercentage >= 0.5 && score < 700) {
-          orderStatus = 'APROVADO'
-        }
-        // 2️⃣ Score Alto: SE Score > 700 → APROVADO
-        else if (score > 700) {
-          orderStatus = 'APROVADO'
-        }
-        // 3️⃣ Score Médio: SE Score entre 501 e 700 → EM_ANALISE
-        else if (score >= 501 && score <= 700) {
-          orderStatus = 'EM_ANALISE'
-        }
-        // 4️⃣ Score Baixo: SE Score <= 500 → REPROVADO
-        else {
-          orderStatus = 'REPROVADO'
-        }
+        orderStatus = evaluateCreditDecision({
+          totalPrice,
+          entryValue,
+          score,
+        })
 
       } catch (err) {
         console.error('Credit analysis network error:', err)
