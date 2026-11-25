@@ -68,9 +68,13 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable
 
+      # Obter configuracoes do vercel
+      - name: Pull vercel config
+        run: yarn vercel pull --yes --environment=preview --token=${{VERCEL_TOKEN}} --scope=${{VERCEL_SCOPE}}
+
       # Build no vercel
       - name: Build Vercel
-        run: yarn vercel build --token=$VERCEL_TOKEN
+        run: yarn vercel build --token=${{VERCEL_TOKEN}}
 
       # Deploy no vercel preview
       - name: Deploy Vercel preview
