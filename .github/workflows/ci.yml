@@ -12,6 +12,8 @@ on:
 env:
   NODE_VERSION: '24'
   VERCEL_TOKEN: ${{secrets.VERCEL_TOKEN}}
+  VERCEL_PROJECTID:${{secrets.VERCEL_PROJECTID}}
+  VERCEL_ORGID:${{secrets.VERCEL_ORGID}}
   VERCEL_SCOPE: 'pedro-pires1'
 
 jobs:
