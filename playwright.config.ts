@@ -29,6 +29,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     [process.env.CI ? 'dot' : 'list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['@testdino/playwright', { token: process.env.TESTDINO_TOKEN }],
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
