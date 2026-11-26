@@ -77,7 +77,7 @@ jobs:
       # 6. Build para o Vercel
       - name: Build Vercel
         run: yarn vercel build --token=$VERCEL_TOKEN
-
+      #adding a comment
       # 7. Deploy preview no vercel
       - name: Deploy preview
         id: deploy
@@ -125,4 +125,3 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: playwright-report
-          
