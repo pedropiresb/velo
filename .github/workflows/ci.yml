@@ -128,7 +128,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
-  Promote to Prod:
+  Promote-to-Prod:
     name: Prod deploy
     needs: [build-and-deploy,e2e-tests]
     runs-on: ubuntu-latest
